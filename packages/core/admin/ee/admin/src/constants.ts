@@ -33,7 +33,6 @@ export const ROUTES_EE = [
       import('./pages/AuthResponse').then((module) => ({ default: module.AuthResponse }))
     ),
     to: '/auth/login/:authResponse',
-    exact: true,
   },
 ];
 

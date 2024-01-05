@@ -3,7 +3,7 @@ import * as React from 'react';
 import { useQueryParams } from '@strapi/helper-plugin';
 import { Contracts } from '@strapi/plugin-content-manager/_internal/shared';
 import produce from 'immer';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { useTypedDispatch } from '../../core/store/hooks';
 import { useFindRedirectionLink } from '../hooks/useFindRedirectionLink';
@@ -20,16 +20,16 @@ interface ListViewLayoutManagerProps extends ProtectedListViewPageProps {}
 
 const ListViewLayoutManager = ({ layout, ...props }: ListViewLayoutManagerProps) => {
   const dispatch = useTypedDispatch();
-  const { replace } = useHistory();
+  const navigate = useNavigate();
   const [{ query, rawQuery }] = useQueryParams();
   const { permissions, isValid: isValidPermissions } = useSyncRbac(query, props.slug, 'listView');
   const redirectionLink = useFindRedirectionLink(props.slug);
 
   React.useEffect(() => {
     if (!rawQuery) {
-      replace(redirectionLink);
+      navigate(redirectionLink, { replace: true });
     }
-  }, [rawQuery, replace, redirectionLink]);
+  }, [rawQuery, navigate, redirectionLink]);
 
   React.useEffect(() => {
     dispatch(setLayout(layout));

@@ -19,7 +19,7 @@ import isEqual from 'lodash/isEqual';
 import set from 'lodash/set';
 import { flushSync } from 'react-dom';
 import { useIntl } from 'react-intl';
-import { Prompt, Redirect } from 'react-router-dom';
+import { Prompt, Navigate } from 'react-router-dom';
 import { ValidationError } from 'yup';
 
 import { useTypedDispatch, useTypedSelector } from '../../../core/store/hooks';
@@ -678,7 +678,7 @@ const EditViewDataManagerProvider = ({
 
   // Redirect the user to the previous page if he is not allowed to read/update a document
   if (shouldRedirectToHomepageWhenEditingEntry) {
-    return <Redirect to={from} />;
+    return <Navigate to={from} />;
   }
 
   if (!modifiedData) {

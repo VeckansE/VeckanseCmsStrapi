@@ -15,7 +15,7 @@ import {
 import { Layer, Pencil } from '@strapi/icons';
 import { Attribute } from '@strapi/types';
 import { useIntl } from 'react-intl';
-import { useHistory, useLocation, useParams } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 
 import { InjectionZone } from '../../../components/InjectionZone';
 import { useTypedSelector } from '../../../core/store/hooks';
@@ -61,9 +61,9 @@ interface EditViewPageProps {
 }
 
 const EditViewPage = ({ allowedActions, userPermissions = [] }: EditViewPageProps) => {
-  const { goBack } = useHistory();
+  const navigate = useNavigate();
   const location = useLocation<{ error?: string }>();
-  const { slug, collectionType, id, origin } = useParams<EditViewPageParams>();
+  const { slug, collectionType, id, origin } = useParams();
   const { trackUsage } = useTracking();
   const { formatMessage } = useIntl();
   const permissions = useTypedSelector((state) => state.admin_app.permissions);
@@ -162,7 +162,7 @@ const EditViewPage = ({ allowedActions, userPermissions = [] }: EditViewPageProp
             onPut={onPut}
             onUnpublish={onUnpublish}
             readActionAllowedFields={readActionAllowedFields}
-            redirectToPreviousPage={goBack}
+            redirectToPreviousPage={() => navigate(-1)}
             slug={slug}
             status={status}
             updateActionAllowedFields={updateActionAllowedFields}
@@ -427,7 +427,7 @@ const ProtectedEditViewPage = ({
   userPermissions = [],
   ...restProps
 }: ProtectedEditViewPageProps) => {
-  const { slug } = useParams<EditViewPageParams>();
+  const { slug } = useParams();
   const viewPermissions = React.useMemo(() => generatePermissionsObject(slug), [slug]);
   const { isLoading, allowedActions } = useRBAC(
     viewPermissions,

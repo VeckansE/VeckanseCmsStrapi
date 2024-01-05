@@ -17,7 +17,7 @@ import {
 import merge from 'lodash/merge';
 import { useIntl } from 'react-intl';
 import { useDispatch } from 'react-redux';
-import { Route, Switch } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 
 import { PrivateRoute } from './components/PrivateRoute';
 import { ADMIN_PERMISSIONS_CE } from './constants';
@@ -31,7 +31,7 @@ import { setAdminPermissions } from './reducer';
 import { useInitQuery, useTelemetryPropertiesQuery } from './services/admin';
 import { PermissionMap } from './types/permissions';
 
-type StrapiRoute = Pick<MenuItem, 'exact' | 'to'> & Required<Pick<MenuItem, 'Component'>>;
+type StrapiRoute = Pick<MenuItem, 'to'> & Required<Pick<MenuItem, 'Component'>>;
 
 const ROUTES_CE: StrapiRoute[] | null = null;
 
@@ -154,23 +154,18 @@ export const App = ({ authLogo, menuLogo, showReleaseNotification, showTutorials
         showTutorials={showTutorials}
       >
         <TrackingProvider value={trackingInfo}>
-          <Switch>
+          <Routes>
             {
               // it won't be null because the default value is []
-              routes!.map(({ to, Component, exact }) => (
-                <Route
-                  // TODO: convert this in the spirit of https://github.com/strapi/strapi/pull/17685
-                  key={to}
-                  path={to}
-                  exact={exact || false}
-                >
+              routes!.map(({ to, Component }) => (
+                <Route key={to} path={to}>
                   <React.Suspense fallback={<LoadingIndicatorPage />}>
                     <Component />
                   </React.Suspense>
                 </Route>
               ))
             }
-            <Route path="/auth/:authType" exact>
+            <Route path="/auth/:authType">
               <AuthPage hasAdmin={Boolean(hasAdmin)} />
             </Route>
             <Route path="/usecase">
@@ -186,7 +181,7 @@ export const App = ({ authLogo, menuLogo, showReleaseNotification, showTutorials
             <Route path="">
               <NotFoundPage />
             </Route>
-          </Switch>
+          </Routes>
         </TrackingProvider>
       </ConfigurationProvider>
     </React.Suspense>

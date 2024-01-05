@@ -2,16 +2,11 @@ import * as React from 'react';
 
 import { AnyAction, createSelector } from '@reduxjs/toolkit';
 import { HeaderLayout, Layout, Main } from '@strapi/design-system';
-import {
-  AnErrorOccurred,
-  CheckPagePermissions,
-  LoadingIndicatorPage,
-  useGuidedTour,
-} from '@strapi/helper-plugin';
+import { CheckPagePermissions, LoadingIndicatorPage, useGuidedTour } from '@strapi/helper-plugin';
 import produce from 'immer';
 import { Helmet } from 'react-helmet';
 import { useIntl } from 'react-intl';
-import { Redirect, Route, Switch, useLocation, useRouteMatch } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation, useMatch } from 'react-router-dom';
 
 import { DragLayer, DragLayerProps } from '../../components/DragLayer';
 import { RootState } from '../../core/store/configure';
@@ -37,7 +32,7 @@ import type { Contracts } from '@strapi/plugin-content-manager/_internal/shared'
  * -----------------------------------------------------------------------------------------------*/
 
 const App = () => {
-  const contentTypeMatch = useRouteMatch(`/content-manager/:kind/:uid`);
+  const contentTypeMatch = useMatch(`/content-manager/:kind/:uid`);
   const { isLoading, collectionTypeLinks, models, singleTypeLinks } = useContentManagerInitData();
   const { pathname } = useLocation();
   const { formatMessage } = useIntl();
@@ -83,17 +78,17 @@ const App = () => {
     supportedModelsToDisplay.length > 0 &&
     pathname !== '/content-manager/403'
   ) {
-    return <Redirect to="/content-manager/403" />;
+    return <Navigate to="/403" />;
   }
 
   // Redirect the user to the create content type page
-  if (supportedModelsToDisplay.length === 0 && pathname !== '/content-manager/no-content-types') {
-    return <Redirect to="/content-manager/no-content-types" />;
+  if (supportedModelsToDisplay.length === 0 && pathname !== '/no-content-types') {
+    return <Navigate to="/no-content-types" />;
   }
 
   if (!contentTypeMatch && authorisedModels.length > 0) {
     return (
-      <Redirect
+      <Navigate
         to={{
           pathname: authorisedModels[0].to,
           search: authorisedModels[0].search ?? '',
@@ -112,8 +107,8 @@ const App = () => {
       />
       <Layout sideNav={<LeftMenu />}>
         <DragLayer renderItem={renderDraglayerItem} />
-        <Switch>
-          <Route path="/content-manager/components/:uid/configurations/edit">
+        <Routes>
+          <Route path="/components/:uid/configurations/edit">
             <CheckPagePermissions
               permissions={permissions.contentManager?.componentsConfigurations}
             >
@@ -121,25 +116,22 @@ const App = () => {
             </CheckPagePermissions>
           </Route>
           {/* These redirects exist because we've changed to use the same term in `:collectionType` as the admin API for simplicity */}
-          <Route path="/content-manager/collectionType/:slug">
-            <Redirect to="/content-manager/collection-types/:slug" />
+          <Route path="/collectionType/:slug">
+            <Navigate to="/collection-types/:slug" />
           </Route>
-          <Route path="/content-manager/singleType/:slug">
-            <Redirect to="/content-manager/single-types/:slug" />
+          <Route path="/singleType/:slug">
+            <Navigate to="/single-types/:slug" />
           </Route>
-          <Route path="/content-manager/:collectionType/:slug">
+          <Route path="/:collectionType/:slug">
             <CollectionTypePages />
           </Route>
-          <Route path="/content-manager/403">
+          <Route path="/403">
             <NoPermissions />
           </Route>
-          <Route path="/content-manager/no-content-types">
+          <Route path="/no-content-types">
             <NoContentType />
           </Route>
-          <Route path="">
-            <AnErrorOccurred />
-          </Route>
-        </Switch>
+        </Routes>
       </Layout>
     </>
   );

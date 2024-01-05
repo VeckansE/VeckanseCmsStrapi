@@ -9,7 +9,7 @@ import * as React from 'react';
 import { LoadingIndicatorPage, useStrapiApp, useTracking } from '@strapi/helper-plugin';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { Route, Switch } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 
 import { GuidedTourModal } from '../components/GuidedTour/Modal';
 import { LeftMenu } from '../components/LeftMenu';
@@ -86,26 +86,21 @@ const Admin = () => {
         }
       >
         <React.Suspense fallback={<LoadingIndicatorPage />}>
-          <Switch>
-            <Route path="/" exact>
+          <Routes>
+            <Route path="/">
               <HomePage />
             </Route>
-            <Route path="/me" exact>
+            <Route path="/me">
               <ProfilePage />
             </Route>
-            <Route path="/content-manager">
+            <Route path="/content-manager/*">
               <CM />
             </Route>
-            {menu.map(({ to, Component, exact }) => {
+            {menu.map(({ to, Component }) => {
               if (!Component) return null;
               else {
                 return (
-                  <Route
-                    // TODO: convert this in the spirit of https://github.com/strapi/strapi/pull/17685
-                    key={to}
-                    path={to}
-                    exact={exact || false}
-                  >
+                  <Route key={to} path={to}>
                     <React.Suspense fallback={<LoadingIndicatorPage />}>
                       <Component />
                     </React.Suspense>
@@ -113,17 +108,13 @@ const Admin = () => {
                 );
               }
             })}
-
-            <Route path={'/settings'} exact>
-              <SettingsPage />
-            </Route>
-            <Route path={'/settings/:settingId'}>
+            <Route path="/settings/*">
               <SettingsPage />
             </Route>
             <Route path="/marketplace">
               <MarketplacePage />
             </Route>
-            <Route path="/list-plugins" exact>
+            <Route path="/list-plugins">
               <InstalledPluginsPage />
             </Route>
             <Route path="/404">
@@ -132,7 +123,7 @@ const Admin = () => {
             <Route path="/500">
               <InternalErrorPage />
             </Route>
-          </Switch>
+          </Routes>
         </React.Suspense>
         <GuidedTourModal />
 

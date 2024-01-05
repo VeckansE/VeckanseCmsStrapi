@@ -43,7 +43,7 @@ import { AxiosError, AxiosResponse } from 'axios';
 import { stringify } from 'qs';
 import { useIntl } from 'react-intl';
 import { useMutation, useQuery } from 'react-query';
-import { useHistory, useLocation, Link as ReactRouterLink } from 'react-router-dom';
+import { useNavigate, useLocation, Link as ReactRouterLink } from 'react-router-dom';
 
 import { InjectionZone } from '../../../components/InjectionZone';
 import { HOOKS } from '../../../constants';
@@ -141,7 +141,7 @@ const ListViewPage = ({
     };
   }>();
   const { pathname } = useLocation();
-  const { push } = useHistory();
+  const navigate = useNavigate();
   const { formatMessage, locale } = useIntl();
   const { get, post, del } = useFetchClient();
   const formatter = useCollator(locale, {
@@ -362,7 +362,7 @@ const ListViewPage = ({
             message: { id: getTranslation('permissions.not-allowed.update') },
           });
 
-          push('/');
+          navigate('/');
 
           return;
         }
@@ -380,11 +380,15 @@ const ListViewPage = ({
             page: pagination.pageCount,
           };
 
-          push({
-            pathname,
-            state: { from: pathname },
-            search: stringify(query),
-          });
+          navigate(
+            {
+              pathname,
+              search: stringify(query),
+            },
+            {
+              state: { from: pathname },
+            }
+          );
 
           return;
         }
@@ -580,11 +584,15 @@ const ListViewPage = ({
 
   const handleRowClick = (id: Entity.ID) => () => {
     trackUsage('willEditEntryFromList');
-    push({
-      pathname: `${pathname}/${id}`,
-      state: { from: pathname },
-      search: pluginsQueryParams,
-    });
+    navigate(
+      {
+        pathname: `${pathname}/${id}`,
+        search: pluginsQueryParams,
+      },
+      {
+        state: { from: pathname },
+      }
+    );
   };
 
   const handleCloneClick =
@@ -595,19 +603,27 @@ const ListViewPage = ({
         );
 
         if ('id' in data) {
-          push({
-            pathname: `${pathname}/${data.id}`,
-            state: { from: pathname },
-            search: pluginsQueryParams,
-          });
+          navigate(
+            {
+              pathname: `${pathname}/${data.id}`,
+              search: pluginsQueryParams,
+            },
+            {
+              state: { from: pathname },
+            }
+          );
         }
       } catch (err) {
         if (err instanceof AxiosError) {
-          push({
-            pathname: `${pathname}/create/clone/${id}`,
-            state: { from: pathname, error: formatAPIError(err) },
-            search: pluginsQueryParams,
-          });
+          navigate(
+            {
+              pathname: `${pathname}/create/clone/${id}`,
+              search: pluginsQueryParams,
+            },
+            {
+              state: { from: pathname, error: formatAPIError(err) },
+            }
+          );
         }
       }
     };

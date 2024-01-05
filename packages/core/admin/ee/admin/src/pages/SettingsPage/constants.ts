@@ -9,8 +9,7 @@ export const ROUTES_EE: Route[] = [
           Component: lazy(() =>
             import('./pages/AuditLogs/ListPage').then((mod) => ({ default: mod.ProtectedListPage }))
           ),
-          to: '/settings/audit-logs',
-          exact: true,
+          to: '/audit-logs',
         },
       ]
     : []),
@@ -22,8 +21,7 @@ export const ROUTES_EE: Route[] = [
               default: mod.ProtectedReviewWorkflowsPage,
             }))
           ),
-          to: '/settings/review-workflows',
-          exact: true,
+          to: '/review-workflows',
         },
         {
           Component: lazy(() =>
@@ -31,8 +29,7 @@ export const ROUTES_EE: Route[] = [
               default: mod.ReviewWorkflowsCreatePage,
             }))
           ),
-          to: '/settings/review-workflows/create',
-          exact: true,
+          to: '/review-workflows/create',
         },
         {
           Component: lazy(() =>
@@ -40,8 +37,7 @@ export const ROUTES_EE: Route[] = [
               default: mod.ReviewWorkflowsEditPage,
             }))
           ),
-          to: '/settings/review-workflows/:workflowId',
-          exact: true,
+          to: '/review-workflows/:workflowId',
         },
       ]
     : []),
@@ -51,8 +47,7 @@ export const ROUTES_EE: Route[] = [
           Component: lazy(() =>
             import('./pages/SingleSignOnPage').then((mod) => ({ default: mod.ProtectedSSO }))
           ),
-          to: '/settings/single-sign-on',
-          exact: true,
+          to: '/single-sign-on',
         },
       ]
     : []),

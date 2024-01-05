@@ -15,7 +15,6 @@ interface MenuItem {
   permissions: Permission[];
   notificationsCount?: number;
   Component: React.LazyExoticComponent<React.ComponentType>;
-  exact?: boolean;
 }
 
 /* -------------------------------------------------------------------------------------------------

@@ -4,7 +4,7 @@ import { Layout } from '@strapi/design-system';
 import { LoadingIndicatorPage, useStrapiApp } from '@strapi/helper-plugin';
 import { Helmet } from 'react-helmet';
 import { useIntl } from 'react-intl';
-import { Redirect, Route, Switch, useParams } from 'react-router-dom';
+import { Navigate, Route, Routes, useParams } from 'react-router-dom';
 
 import { useEnterprise } from '../../hooks/useEnterprise';
 import { useSettingsMenu } from '../../hooks/useSettingsMenu';
@@ -36,7 +36,7 @@ const SettingsPage = () => {
   }
 
   if (!settingId) {
-    return <Redirect to="/settings/application-infos" />;
+    return <Navigate to="/application-infos" />;
   }
 
   return (
@@ -48,10 +48,12 @@ const SettingsPage = () => {
         })}
       />
 
-      <Switch>
-        <Route path="/settings/application-infos" component={ApplicationInfoPage} exact />
-        {makeUniqueRoutes(routes).map(({ to, Component, exact }) => (
-          <Route key={to} path={to} exact={exact || false}>
+      <Routes>
+        <Route path="/application-infos">
+          <ApplicationInfoPage />
+        </Route>
+        {makeUniqueRoutes(routes).map(({ to, Component }) => (
+          <Route key={to} path={to}>
             <React.Suspense fallback={<LoadingIndicatorPage />}>
               <Component />
             </React.Suspense>
@@ -60,7 +62,7 @@ const SettingsPage = () => {
         {Object.values(settings).flatMap(({ links }) =>
           links.map((link) => {
             return (
-              <Route key={link.id} path={link.to} exact={link.exact || false}>
+              <Route key={link.id} path={link.to}>
                 <React.Suspense fallback={<LoadingIndicatorPage />}>
                   <link.Component />
                 </React.Suspense>
@@ -68,7 +70,7 @@ const SettingsPage = () => {
             );
           })
         )}
-      </Switch>
+      </Routes>
     </Layout>
   );
 };

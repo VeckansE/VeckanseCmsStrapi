@@ -1,10 +1,10 @@
-import { Redirect, useHistory, useRouteMatch } from 'react-router-dom';
+import { Navigate, useLocation, useMatch } from 'react-router-dom';
 
 import { useAuth } from '../../features/Auth';
 import { useEnterprise } from '../../hooks/useEnterprise';
 
 import { Login as LoginCE } from './components/Login';
-import { AuthType, FORMS, FormDictionary } from './constants';
+import { FORMS, FormDictionary } from './constants';
 
 /* -------------------------------------------------------------------------------------------------
  * AuthPage
@@ -15,10 +15,8 @@ interface AuthPageProps {
 }
 
 const AuthPage = ({ hasAdmin }: AuthPageProps) => {
-  const {
-    location: { search },
-  } = useHistory();
-  const match = useRouteMatch<{ authType: AuthType }>('/auth/:authType');
+  const { search } = useLocation();
+  const match = useMatch('/auth/:authType');
   const authType = match?.params.authType;
   const Login = useEnterprise(
     LoginCE,
@@ -41,7 +39,7 @@ const AuthPage = ({ hasAdmin }: AuthPageProps) => {
   const token = useAuth('AuthPage', (state) => state.token);
 
   if (!authType || !forms) {
-    return <Redirect to="/" />;
+    return <Navigate to="/" />;
   }
 
   const Component = forms[authType];
@@ -51,13 +49,13 @@ const AuthPage = ({ hasAdmin }: AuthPageProps) => {
   // there is already an admin user oo
   // the user is already logged in
   if (!Component || (hasAdmin && authType === 'register-admin') || token) {
-    return <Redirect to="/" />;
+    return <Navigate to="/" />;
   }
 
   // Redirect the user to the register-admin if it is the first user
   if (!hasAdmin && authType !== 'register-admin') {
     return (
-      <Redirect
+      <Navigate
         to={{
           pathname: '/auth/register-admin',
           // Forward the `?redirectTo` from /auth/login

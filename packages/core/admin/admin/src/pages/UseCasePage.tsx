@@ -14,7 +14,7 @@ import {
 import { pxToRem, useNotification } from '@strapi/helper-plugin';
 import { parse } from 'qs';
 import { useIntl } from 'react-intl';
-import { useHistory } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { Logo } from '../components/UnauthenticatedLogo';
@@ -72,13 +72,14 @@ const TypographyCenter = styled(Typography)`
 
 export const UseCasePage = () => {
   const toggleNotification = useNotification();
-  const { push, location } = useHistory();
+  const location = useLocation();
+  const navigate = useNavigate();
   const { formatMessage } = useIntl();
   const [role, setRole] = React.useState<string | number | null>(null);
   const [otherRole, setOtherRole] = React.useState('');
 
   const { firstname, email } = useAuth('UseCasePage', (state) => state.user) ?? {};
-  const { hasAdmin } = parse(location?.search, { ignoreQueryPrefix: true });
+  const { hasAdmin } = parse(location.search, { ignoreQueryPrefix: true });
   const isOther = role === 'other';
 
   const handleSubmit = async (event: React.FormEvent, skipPersona: boolean) => {
@@ -107,7 +108,7 @@ export const UseCasePage = () => {
           defaultMessage: 'Project has been successfully created',
         },
       });
-      push('/');
+      navigate('/');
     } catch (err) {
       // Silent
     }

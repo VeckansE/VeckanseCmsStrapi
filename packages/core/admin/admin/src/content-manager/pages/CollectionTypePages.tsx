@@ -6,7 +6,7 @@
 import * as React from 'react';
 
 import { CheckPagePermissions, LoadingIndicatorPage } from '@strapi/helper-plugin';
-import { Route, Switch, useRouteMatch } from 'react-router-dom';
+import { Route, Routes, useMatch } from 'react-router-dom';
 
 import { useTypedSelector } from '../../core/store/hooks';
 import { NotFoundPage } from '../../pages/NotFoundPage';
@@ -25,10 +25,7 @@ import { ListSettingsView } from './ListSettingsView';
 import { ListViewLayoutManager } from './ListViewLayoutManager';
 
 const CollectionTypePages = () => {
-  const match = useRouteMatch<{
-    collectionType: 'collection-types' | 'single-types';
-    slug: string;
-  }>('/content-manager/:collectionType/:slug');
+  const match = useMatch('/content-manager/:collectionType/:slug');
 
   const permissions = useTypedSelector((state) => state.admin_app.permissions);
 
@@ -71,25 +68,19 @@ const CollectionTypePages = () => {
   }
 
   const {
-    path,
     params: { collectionType, slug },
   } = match;
 
-  /**
-   * We do this cast so the params are correctly inferred on the render props.
-   */
-  const currentPath = path as `/content-manager/:collectionType/:slug`;
-
   return (
-    <Switch>
-      <Route path={currentPath} exact>
+    <Routes>
+      <Route path="/">
         {collectionType === 'collection-types' ? (
           <ListViewLayoutManager slug={slug} layout={layout} />
         ) : (
           <EditViewLayoutManager layout={layout} />
         )}
       </Route>
-      <Route exact path={`${currentPath}/configurations/edit`}>
+      <Route path={`/configurations/edit`}>
         <CheckPagePermissions
           permissions={permissions.contentManager?.collectionTypesConfigurations}
         >
@@ -104,7 +95,7 @@ const CollectionTypePages = () => {
       </Route>
       {collectionType === 'collection-types' ? (
         <>
-          <Route path={`${currentPath}/configurations/list`}>
+          <Route path={`/configurations/list`}>
             <CheckPagePermissions
               permissions={permissions.contentManager?.collectionTypesConfigurations}
             >
@@ -115,15 +106,15 @@ const CollectionTypePages = () => {
               />
             </CheckPagePermissions>
           </Route>
-          <Route path={`${currentPath}/create/clone/:origin`} exact>
+          <Route path={`/create/clone/:origin`}>
             <EditViewLayoutManager layout={layout} />
           </Route>
-          <Route path={[`${currentPath}/create`, `${currentPath}/:id`]} exact>
+          <Route path=":id">
             <EditViewLayoutManager layout={layout} />
           </Route>
         </>
       ) : null}
-    </Switch>
+    </Routes>
   );
 };
 
