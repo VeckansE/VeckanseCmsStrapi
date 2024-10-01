@@ -3,7 +3,6 @@ import { renderHook } from '@testing-library/react';
 import { IntlProvider } from 'react-intl';
 
 import { useLicenseLimitNotification } from '../useLicenseLimitNotification';
-// @ts-expect-error - no types, yet.
 import { useLicenseLimits } from '../useLicenseLimits';
 
 const baseLicenseInfo = {
@@ -28,9 +27,12 @@ jest.mock('react-router', () => {
 
 const toggleNotification = jest.fn();
 
-jest.mock('@strapi/helper-plugin', () => {
+jest.mock('../../../../../admin/src/features/Notifications', () => {
   return {
-    useNotification: jest.fn(() => toggleNotification),
+    ...jest.requireActual('../../../../../admin/src/features/Notifications'),
+    useNotification: jest.fn(() => ({
+      toggleNotification,
+    })),
   };
 });
 
@@ -54,6 +56,7 @@ describe('useLicenseLimitNotification', () => {
   });
 
   it('should return if no license info is available', () => {
+    // @ts-expect-error – mock
     useLicenseLimits.mockImplementationOnce(() => ({
       license: {},
     }));
@@ -63,6 +66,7 @@ describe('useLicenseLimitNotification', () => {
   });
 
   it('should not display notification if permittedSeat info is missing', () => {
+    // @ts-expect-error – mock
     useLicenseLimits.mockImplementationOnce(() => ({
       license: {
         ...baseLicenseInfo,
@@ -75,6 +79,7 @@ describe('useLicenseLimitNotification', () => {
   });
 
   it('should not display notification if status is not AT_LIMIT or OVER_LIMIT', () => {
+    // @ts-expect-error – mock
     useLicenseLimits.mockImplementationOnce(() => ({
       license: {
         ...baseLicenseInfo,
@@ -95,7 +100,7 @@ describe('useLicenseLimitNotification', () => {
     setup();
 
     expect(toggleNotification).toHaveBeenCalledWith({
-      type: 'softWarning',
+      type: 'warning',
       message:
         "Add seats to re-enable Users. If you already did it but it's not reflected in Strapi yet, make sure to restart your app.",
       title: 'At seat limit (5/5)',
@@ -109,6 +114,7 @@ describe('useLicenseLimitNotification', () => {
   });
 
   it('should display a warning notification when license limit is at limit', () => {
+    // @ts-expect-error – mock
     useLicenseLimits.mockImplementationOnce(() => ({
       license: {
         ...baseLicenseInfo,
@@ -119,7 +125,7 @@ describe('useLicenseLimitNotification', () => {
     setup();
 
     expect(toggleNotification).toHaveBeenCalledWith({
-      type: 'warning',
+      type: 'danger',
       message:
         "Add seats to invite Users. If you already did it but it's not reflected in Strapi yet, make sure to restart your app.",
       title: 'Over seat limit (5/5)',
@@ -133,6 +139,7 @@ describe('useLicenseLimitNotification', () => {
   });
 
   it('should have cloud billing url if is hosted on strapi cloud', () => {
+    // @ts-expect-error – mock
     useLicenseLimits.mockImplementationOnce(() => ({
       license: {
         ...baseLicenseInfo,
@@ -143,7 +150,7 @@ describe('useLicenseLimitNotification', () => {
     setup();
 
     expect(toggleNotification).toHaveBeenCalledWith({
-      type: 'softWarning',
+      type: 'warning',
       message:
         "Add seats to re-enable Users. If you already did it but it's not reflected in Strapi yet, make sure to restart your app.",
       title: 'At seat limit (5/5)',

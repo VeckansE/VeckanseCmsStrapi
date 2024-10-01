@@ -1,4 +1,4 @@
-import { translatedErrors as errorsTrads } from '@strapi/helper-plugin';
+import { translatedErrors as errorsTrads } from '@strapi/admin/strapi-admin';
 import * as yup from 'yup';
 
 import getTrad from './getTrad';
@@ -6,6 +6,7 @@ import getTrad from './getTrad';
 export const urlSchema = yup.object().shape({
   urls: yup.string().test({
     name: 'isUrlValid',
+    // eslint-disable-next-line no-template-curly-in-string
     message: '${path}',
     test(values = '') {
       const urls = values.split(/\r?\n/);
@@ -13,14 +14,14 @@ export const urlSchema = yup.object().shape({
       if (urls.length === 0) {
         return this.createError({
           path: this.path,
-          message: errorsTrads.min,
+          message: errorsTrads.min.id,
         });
       }
 
       if (urls.length > 20) {
         return this.createError({
           path: this.path,
-          message: errorsTrads.max,
+          message: errorsTrads.max.id,
         });
       }
 

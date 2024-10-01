@@ -1,47 +1,101 @@
-import produce from 'immer';
+import { createSlice } from '@reduxjs/toolkit';
 
-import { ACTION_SET_APP_RUNTIME_STATUS, ACTION_SET_ADMIN_PERMISSIONS } from './constants';
 import { PermissionMap } from './types/permissions';
 
-interface State {
-  status: 'init' | 'runtime';
+import type { PayloadAction } from '@reduxjs/toolkit';
+
+type ThemeName = 'light' | 'dark' | 'system';
+
+interface AppState {
+  language: {
+    locale: string;
+    localeNames: Record<string, string>;
+  };
   permissions: Partial<PermissionMap>;
+  theme: {
+    currentTheme: ThemeName;
+    availableThemes: string[];
+  };
+  token?: string | null;
 }
 
-const initialState = {
-  permissions: {},
-  status: 'init',
-} satisfies State;
+const STORAGE_KEYS = {
+  TOKEN: 'jwtToken',
+  USER: 'userInfo',
+};
 
-interface SetAppRuntimeStatusAction {
-  type: typeof ACTION_SET_APP_RUNTIME_STATUS;
-}
+const THEME_LOCAL_STORAGE_KEY = 'STRAPI_THEME';
+const LANGUAGE_LOCAL_STORAGE_KEY = 'strapi-admin-language';
 
-interface SetAdminPermissionsAction {
-  type: typeof ACTION_SET_ADMIN_PERMISSIONS;
-  payload: Record<string, unknown>;
-}
+export const getStoredToken = (): string | null => {
+  const token =
+    localStorage.getItem(STORAGE_KEYS.TOKEN) ?? sessionStorage.getItem(STORAGE_KEYS.TOKEN);
 
-type Action = SetAppRuntimeStatusAction | SetAdminPermissionsAction;
+  if (typeof token === 'string') {
+    return JSON.parse(token);
+  }
 
-const reducer = (state: State = initialState, action: Action) =>
-  /* eslint-disable-next-line consistent-return */
-  produce(state, (draftState) => {
-    switch (action.type) {
-      case ACTION_SET_APP_RUNTIME_STATUS: {
-        draftState.status = 'runtime';
-        break;
+  return null;
+};
+
+const adminSlice = createSlice({
+  name: 'admin',
+  initialState: () => {
+    return {
+      language: {
+        locale: 'en',
+        localeNames: { en: 'English' },
+      },
+      permissions: {},
+      theme: {
+        availableThemes: [],
+        currentTheme: localStorage.getItem(THEME_LOCAL_STORAGE_KEY) || 'system',
+      },
+      token: null,
+    } as AppState;
+  },
+  reducers: {
+    setAppTheme(state, action: PayloadAction<ThemeName>) {
+      state.theme.currentTheme = action.payload;
+      window.localStorage.setItem(THEME_LOCAL_STORAGE_KEY, action.payload);
+    },
+    setAvailableThemes(state, action: PayloadAction<AppState['theme']['availableThemes']>) {
+      state.theme.availableThemes = action.payload;
+    },
+    setLocale(state, action: PayloadAction<string>) {
+      state.language.locale = action.payload;
+
+      window.localStorage.setItem(LANGUAGE_LOCAL_STORAGE_KEY, action.payload);
+      document.documentElement.setAttribute('lang', action.payload);
+    },
+    setToken(state, action: PayloadAction<string | null>) {
+      state.token = action.payload;
+    },
+    login(state, action: PayloadAction<{ token: string; persist?: boolean }>) {
+      const { token, persist } = action.payload;
+
+      if (!persist) {
+        window.sessionStorage.setItem(STORAGE_KEYS.TOKEN, JSON.stringify(token));
+      } else {
+        window.localStorage.setItem(STORAGE_KEYS.TOKEN, JSON.stringify(token));
       }
 
-      case ACTION_SET_ADMIN_PERMISSIONS: {
-        draftState.permissions = action.payload;
-        break;
-      }
+      state.token = token;
+    },
+    logout(state) {
+      state.token = null;
+      window.localStorage.removeItem(STORAGE_KEYS.TOKEN);
+      window.localStorage.removeItem(STORAGE_KEYS.USER);
+      window.sessionStorage.removeItem(STORAGE_KEYS.TOKEN);
+      window.sessionStorage.removeItem(STORAGE_KEYS.USER);
+    },
+  },
+});
 
-      default:
-        return draftState;
-    }
-  });
+const reducer = adminSlice.reducer;
 
-export { reducer, initialState };
-export type { State, Action, SetAppRuntimeStatusAction, SetAdminPermissionsAction };
+export const { setAppTheme, setAvailableThemes, setLocale, setToken, logout, login } =
+  adminSlice.actions;
+
+export { reducer, THEME_LOCAL_STORAGE_KEY, LANGUAGE_LOCAL_STORAGE_KEY };
+export type { AppState, ThemeName };

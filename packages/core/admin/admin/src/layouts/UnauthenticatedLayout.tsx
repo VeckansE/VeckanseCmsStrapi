@@ -1,22 +1,31 @@
 import * as React from 'react';
 
-import { Box, Flex, SingleSelect, SingleSelectOption } from '@strapi/design-system';
+import {
+  Box,
+  BoxComponent,
+  Flex,
+  FlexComponent,
+  SingleSelect,
+  SingleSelectOption,
+} from '@strapi/design-system';
 import { useIntl } from 'react-intl';
-import styled from 'styled-components';
+import { styled } from 'styled-components';
 
-import { useLocales } from '../components/LanguageProvider';
+import { useTypedDispatch, useTypedSelector } from '../core/store/hooks';
+import { setLocale } from '../reducer';
 
-const Wrapper = styled(Box)`
+const Wrapper = styled<BoxComponent>(Box)`
   margin: 0 auto;
   width: 552px;
 `;
 
-export const Column = styled(Flex)`
+export const Column = styled<FlexComponent>(Flex)`
   flex-direction: column;
 `;
 
 const LocaleToggle = () => {
-  const { changeLocale, localeNames } = useLocales();
+  const localeNames = useTypedSelector((state) => state.admin_app.language.localeNames);
+  const dispatch = useTypedDispatch();
   const { formatMessage, locale } = useIntl();
 
   return (
@@ -27,7 +36,7 @@ const LocaleToggle = () => {
       })}
       value={locale}
       onChange={(language) => {
-        changeLocale(language as string);
+        dispatch(setLocale(language as string));
       }}
     >
       {Object.entries(localeNames).map(([language, name]) => (
@@ -64,7 +73,7 @@ interface UnauthenticatedLayoutProps {
 export const UnauthenticatedLayout = ({ children }: UnauthenticatedLayoutProps) => {
   return (
     <div>
-      <Flex as="header" justifyContent="flex-end">
+      <Flex tag="header" justifyContent="flex-end">
         <Box paddingTop={6} paddingRight={8}>
           <LocaleToggle />
         </Box>

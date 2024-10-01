@@ -1,19 +1,18 @@
-import { Route, Switch } from 'react-router-dom';
+import { Page } from '@strapi/admin/strapi-admin';
+import { Route, Routes } from 'react-router-dom';
 
-import { pluginId } from '../pluginId';
+import { PERMISSIONS } from '../constants';
 
-import { ProtectedReleaseDetailsPage } from './ReleaseDetailsPage';
-import { ProtectedReleasesPage } from './ReleasesPage';
+import { ReleaseDetailsPage } from './ReleaseDetailsPage';
+import { ReleasesPage } from './ReleasesPage';
 
 export const App = () => {
   return (
-    <Switch>
-      <Route exact path={`/plugins/${pluginId}`} component={ProtectedReleasesPage} />
-      <Route
-        exact
-        path={`/plugins/${pluginId}/:releaseId`}
-        component={ProtectedReleaseDetailsPage}
-      />
-    </Switch>
+    <Page.Protect permissions={PERMISSIONS.main}>
+      <Routes>
+        <Route index element={<ReleasesPage />} />
+        <Route path={':releaseId'} element={<ReleaseDetailsPage />} />
+      </Routes>
+    </Page.Protect>
   );
 };

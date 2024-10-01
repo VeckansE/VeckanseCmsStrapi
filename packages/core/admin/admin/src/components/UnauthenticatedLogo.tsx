@@ -1,17 +1,17 @@
-import styled from 'styled-components';
+import { styled } from 'styled-components';
 
-import { useConfiguration } from '../contexts/configuration';
+import { useConfiguration } from '../features/Configuration';
 
 const Img = styled.img`
-  height: ${72 / 16}rem;
+  height: 7.2rem;
 `;
 
 const Logo = () => {
   const {
     logos: { auth },
-  } = useConfiguration();
+  } = useConfiguration('UnauthenticatedLogo');
 
-  return <Img src={auth?.custom ?? auth.default} aria-hidden alt="" />;
+  return <Img src={auth?.custom?.url || auth.default} aria-hidden alt="" />;
 };
 
 export { Logo };

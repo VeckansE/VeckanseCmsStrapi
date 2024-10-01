@@ -1,4 +1,6 @@
-import { StrapiTheme } from '@strapi/design-system';
+import { type StrapiTheme } from '@strapi/design-system';
+
+import type { Modules } from '@strapi/types';
 
 declare module 'styled-components' {
   // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -10,6 +12,9 @@ declare global {
     strapi: {
       backendURL: string;
       isEE: boolean;
+      future: {
+        isEnabled: (name: keyof NonNullable<Modules.Features.FeaturesConfig['future']>) => boolean;
+      };
       features: {
         SSO: 'sso';
         AUDIT_LOGS: 'audit-logs';
@@ -17,8 +22,8 @@ declare global {
         isEnabled: (featureName?: string) => boolean;
       };
       flags: {
-        nps?: boolean;
         promoteEE?: boolean;
+        nps?: boolean;
       };
       projectType: 'Community' | 'Enterprise';
       telemetryDisabled: boolean;

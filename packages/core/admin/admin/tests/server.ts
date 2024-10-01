@@ -1,11 +1,17 @@
 import { rest } from 'msw';
-import { setupServer } from 'msw/node';
+import { type SetupServer, setupServer } from 'msw/node';
 import * as qs from 'qs';
 
 import { MockData, mockData } from './mockData';
 
-export const server = setupServer(
+export const server: SetupServer = setupServer(
   ...[
+    /**
+     * TRACKING
+     */
+    rest.post('https://analytics.strapi.io/api/v2/track', (req, res, ctx) => {
+      return res(ctx.status(200));
+    }),
     /**
      *
      * ADMIN ROLES
@@ -18,11 +24,12 @@ export const server = setupServer(
             {
               id: 1,
               code: 'strapi-editor',
+              name: 'Editor',
             },
-
             {
               id: 2,
               code: 'strapi-author',
+              name: 'Author',
             },
           ],
         })
@@ -73,8 +80,8 @@ export const server = setupServer(
         ctx.json({
           data: {
             results: [
-              { id: 1, firstname: 'John', lastname: 'Doe' },
-              { id: 2, firstname: 'Kai', lastname: 'Doe' },
+              { id: 1, firstname: 'John', lastname: 'Doe', roles: [] },
+              { id: 2, firstname: 'Kai', lastname: 'Doe', roles: [] },
             ],
             pagination: {
               page: 1,
@@ -90,6 +97,11 @@ export const server = setupServer(
             id: 1,
             firstname: 'John',
             lastname: 'Doe',
+            emai: 'test@testing.com',
+            roles: [
+              { id: 1, code: 'strapi-editor', name: 'Editor' },
+              { id: 2, code: 'strapi-super-admin', name: 'Super Admin' },
+            ],
             params: {
               some: req.url.searchParams.get('some'),
             },
@@ -217,10 +229,7 @@ export const server = setupServer(
           data: {
             attribute: 1,
 
-            features: [
-              { name: 'without-options' },
-              { name: 'with-options', options: { something: true } },
-            ],
+            features: [{ name: 'sso' }, { name: 'audit-logs', options: { retentionDays: 1 } }],
           },
         })
       );
@@ -300,6 +309,15 @@ export const server = setupServer(
         })
       );
     }),
+    rest.post('/admin/renew-token', (req, res, ctx) => {
+      return res(
+        ctx.json({
+          data: {
+            token: 'renewed-test-token',
+          },
+        })
+      );
+    }),
     /**
      * WEBHOOKS
      */
@@ -332,164 +350,11 @@ export const server = setupServer(
       );
     }),
     /**
-     * REVIEW_WORKFLOWS
+     *
+     * CONTENT_MANAGER
+     *
      */
-    rest.get('/admin/review-workflows/workflows', (req, res, ctx) => {
-      return res(
-        ctx.json({
-          data: [
-            {
-              id: 1,
-              stages: [
-                {
-                  id: 1,
-                  name: 'To Review',
-                  color: '#FFFFFF',
-                },
-              ],
-            },
-          ],
-        })
-      );
-    }),
-    rest.get('/admin/review-workflows/workflows/:id', (req, res, ctx) =>
-      res(
-        ctx.json({
-          data: {
-            id: 1,
-            stages: [
-              {
-                id: 1,
-                name: 'To Review',
-                color: '#FFFFFF',
-              },
-            ],
-          },
-        })
-      )
-    ),
-    rest.get('/content-manager/collection-types/:contentType/stages', (req, res, ctx) =>
-      res(
-        ctx.json({
-          data: [
-            {
-              id: 1,
-              name: 'Todo',
-            },
-
-            {
-              id: 2,
-              name: 'Done',
-            },
-          ],
-
-          meta: {
-            workflowCount: 10,
-            stagesCount: 5,
-          },
-        })
-      )
-    ),
-    rest.get('/content-manager/single-types/:contentType/stages', (req, res, ctx) =>
-      res(
-        ctx.json({
-          data: [
-            {
-              id: 2,
-              name: 'Todo',
-            },
-
-            {
-              id: 3,
-              name: 'Done',
-            },
-          ],
-
-          meta: {
-            workflowCount: 10,
-            stagesCount: 5,
-          },
-        })
-      )
-    ),
-    rest.put(
-      '/admin/content-manager/collection-types/:contentType/:id/assignee',
-      (req, res, ctx) => {
-        return res(ctx.status(200));
-      }
-    ),
-    rest.get('/admin/content-manager/:collectionType/:contentType/:id/stages', (req, res, ctx) =>
-      res(
-        ctx.json({
-          data: [
-            {
-              id: 1,
-              color: '#4945FF',
-              name: 'Stage 1',
-            },
-
-            {
-              id: 2,
-              color: '#4945FF',
-              name: 'Stage 2',
-            },
-          ],
-          meta: {
-            workflowCount: 10,
-          },
-        })
-      )
-    ),
-    // /**
-    //  *
-    //  * CONTENT_MANAGER
-    //  *
-    //  */
-    rest.put('/content-manager/content-types/:contentType/configuration', (req, res, ctx) => {
-      return res(ctx.status(200));
-    }),
-    rest.post('/content-manager/uid/generate', async (req, res, ctx) => {
-      const body = await req.json();
-
-      return res(
-        ctx.json({
-          data: body?.data?.target ?? 'regenerated',
-        })
-      );
-    }),
-    rest.post('/content-manager/uid/check-availability', async (req, res, ctx) => {
-      const body = await req.json();
-
-      return res(
-        ctx.json({
-          isAvailable: body?.value === 'available',
-        })
-      );
-    }),
-    rest.get('/content-manager/collection-types/:contentType', (req, res, ctx) => {
-      return res(
-        ctx.json({
-          results: [
-            {
-              id: 1,
-              name: 'Entry 1',
-              publishedAt: null,
-            },
-            {
-              id: 2,
-              name: 'Entry 2',
-              publishedAt: null,
-            },
-            {
-              id: 3,
-              name: 'Entry 3',
-              publishedAt: null,
-            },
-          ],
-        })
-      );
-    }),
-    rest.get('*/content-manager/content-types', (req, res, ctx) =>
+    rest.get('/content-manager/content-types', (req, res, ctx) =>
       res(
         ctx.json({
           data: [
@@ -522,7 +387,7 @@ export const server = setupServer(
         })
       )
     ),
-    rest.get('*/content-manager/components', (req, res, ctx) =>
+    rest.get('/content-manager/components', (req, res, ctx) =>
       res(
         ctx.json({
           data: [
@@ -551,28 +416,6 @@ export const server = setupServer(
           ],
         })
       )
-    ),
-    rest.post(
-      '/content-manager/collection-types/:contentType/actions/bulkPublish',
-      (req, res, ctx) => {
-        return res(
-          ctx.json({
-            data: {
-              count: 3,
-            },
-          })
-        );
-      }
-    ),
-    rest.get(
-      '/content-manager/collection-types/:contentType/actions/countManyEntriesDraftRelations',
-      (req, res, ctx) => {
-        return res(
-          ctx.json({
-            data: 0,
-          })
-        );
-      }
     ),
     /**
      *
@@ -675,6 +518,267 @@ export const server = setupServer(
      *
      */
     rest.post('https://analytics.strapi.io/submit-nps', (req, res, ctx) => {
+      return res(ctx.status(200));
+    }),
+    /**
+     * CONTENT-API (API TOKENS)
+     */
+    rest.get('/admin/content-api/permissions', (req, res, ctx) => {
+      return res(
+        ctx.json({
+          data: {
+            'api::address': {
+              controllers: {
+                address: ['find', 'findOne'],
+              },
+            },
+            'plugin::myplugin': {
+              controllers: {
+                test: ['findOne', 'find'],
+              },
+            },
+          },
+        })
+      );
+    }),
+    rest.get('/admin/content-api/routes', (req, res, ctx) => {
+      return res(
+        ctx.json({
+          data: {
+            'api::address': [
+              {
+                method: 'GET',
+                path: '/api/addresses',
+                handler: 'api::address.address.find',
+                config: {
+                  auth: {
+                    scope: ['api::address.address.find'],
+                  },
+                },
+                info: {
+                  apiName: 'address',
+                  type: 'content-api',
+                },
+              },
+              {
+                method: 'GET',
+                path: '/api/addresses/:id',
+                handler: 'api::address.address.findOne',
+                config: {
+                  auth: {
+                    scope: ['api::address.address.findOne'],
+                  },
+                },
+                info: {
+                  apiName: 'address',
+                  type: 'content-api',
+                },
+              },
+            ],
+            'plugin::myplugin': [
+              {
+                method: 'GET',
+                path: '/api/myplugin/tests',
+                handler: 'plugin::myplugin.test.find',
+                config: {
+                  auth: {
+                    scope: ['plugin::myplugin.test.find'],
+                  },
+                },
+                info: {
+                  pluginName: 'myplugin',
+                  type: 'content-api',
+                },
+              },
+              {
+                method: 'GET',
+                path: '/api/myplugin/tests/:id',
+                handler: 'plugin::myplugin.test.findOne',
+                config: {
+                  auth: {
+                    scope: ['plugin::myplugin.test.findOne'],
+                  },
+                },
+                info: {
+                  pluginName: 'myplugin',
+                  type: 'content-api',
+                },
+              },
+            ],
+          },
+        })
+      );
+    }),
+    /**
+     * API TOKENS
+     */
+    rest.get('/admin/api-tokens', (req, res, ctx) => {
+      return res(
+        ctx.json({
+          data: [
+            {
+              id: '1',
+              name: 'My super token',
+              description: 'This describe my super token',
+              type: 'read-only',
+              createdAt: '2021-11-15T00:00:00.000Z',
+              permissions: [],
+            },
+          ],
+        })
+      );
+    }),
+    rest.get('/admin/api-tokens/:id', (req, res, ctx) => {
+      return res(
+        ctx.json({
+          data: {
+            id: '1',
+            name: 'My super token',
+            description: 'This describe my super token',
+            type: 'read-only',
+            createdAt: '2021-11-15T00:00:00.000Z',
+            permissions: [],
+          },
+        })
+      );
+    }),
+    /**
+     * Audit Logs
+     */
+    rest.get('/admin/audit-logs', (req, res, ctx) => {
+      return res(
+        ctx.json({
+          results: [
+            {
+              id: 1,
+              action: 'admin.logout',
+              date: '2023-10-31T15:56:54.873Z',
+              payload: {
+                user: {
+                  id: 1,
+                  firstname: 'test',
+                  lastname: 'testing',
+                  username: null,
+                  email: 'test@testing.com',
+                  isActive: true,
+                  blocked: false,
+                  preferedLanguage: null,
+                  createdAt: '2023-10-26T19:19:38.245Z',
+                  updatedAt: '2023-10-26T19:19:38.245Z',
+                  roles: [
+                    {
+                      id: 1,
+                      name: 'Super Admin',
+                      description: 'Super Admins can access and manage all features and settings.',
+                      code: 'strapi-super-admin',
+                    },
+                  ],
+                },
+              },
+              user: {
+                id: 1,
+                email: 'test@testing.com',
+                displayName: 'test testing',
+              },
+            },
+            {
+              id: 2,
+              action: 'user.create',
+              date: '2023-10-31T15:57:38.957Z',
+              payload: {
+                user: {
+                  id: 2,
+                  firstname: 'editor',
+                  lastname: 'test',
+                  username: null,
+                  email: 'editor@testing.com',
+                  isActive: true,
+                  blocked: false,
+                  preferedLanguage: null,
+                  createdAt: '2023-10-31T15:57:38.948Z',
+                  updatedAt: '2023-10-31T15:57:38.948Z',
+                  roles: [
+                    {
+                      id: 2,
+                      name: 'Editor',
+                      description:
+                        'Editors can manage and publish contents including those of other users.',
+                      code: 'strapi-editor',
+                    },
+                  ],
+                },
+              },
+              user: {
+                id: 1,
+                email: 'test@testing.com',
+                displayName: 'test testing',
+              },
+            },
+          ],
+          pagination: {
+            page: 1,
+            pageSize: 2,
+            pageCount: 1,
+            total: 2,
+          },
+        })
+      );
+    }),
+    rest.get('/admin/audit-logs/:id', (req, res, ctx) => {
+      return res(
+        ctx.json({
+          id: 1,
+          action: 'admin.logout',
+          date: '2023-10-31T15:56:54.873Z',
+          payload: {
+            user: {
+              id: 1,
+              firstname: 'test',
+              lastname: 'testing',
+              username: null,
+              email: 'test@testing.com',
+              isActive: true,
+              blocked: false,
+              preferedLanguage: null,
+              createdAt: '2023-10-26T19:19:38.245Z',
+              updatedAt: '2023-10-26T19:19:38.245Z',
+              roles: [
+                {
+                  id: 1,
+                  name: 'Super Admin',
+                  description: 'Super Admins can access and manage all features and settings.',
+                  code: 'strapi-super-admin',
+                },
+              ],
+            },
+          },
+          user: {
+            id: 1,
+            email: 'test@testing.com',
+            displayName: 'test testing',
+          },
+        })
+      );
+    }),
+    /**
+     *
+     * fetchClient, useFetchClient and getFetchClient
+     *
+     */
+    rest.get('/use-fetch-client-test', (req, res, ctx) => {
+      return res(
+        ctx.json({
+          data: {
+            results: [
+              { id: 2, name: 'newest', publishedAt: null },
+              { id: 1, name: 'oldest', publishedAt: null },
+            ],
+            pagination: { page: 1, pageCount: 10 },
+          },
+        })
+      );
+    }),
+    rest.get('/test-fetch-client', (req, res, ctx) => {
       return res(ctx.status(200));
     }),
   ]

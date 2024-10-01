@@ -1,10 +1,7 @@
-import { Box, Button, Divider, Flex, Loader, Main, Typography } from '@strapi/design-system';
-import { Link } from '@strapi/design-system/v2';
-import { useFetchClient } from '@strapi/helper-plugin';
+import { Box, Button, Divider, Flex, Loader, Main, Typography, Link } from '@strapi/design-system';
 import { useIntl } from 'react-intl';
-import { useQuery } from 'react-query';
-import { NavLink, Redirect, useHistory } from 'react-router-dom';
-import styled from 'styled-components';
+import { NavLink, Navigate, useNavigate } from 'react-router-dom';
+import { styled } from 'styled-components';
 
 import { Logo } from '../../../../../../admin/src/components/UnauthenticatedLogo';
 import {
@@ -12,35 +9,26 @@ import {
   LayoutContent,
   UnauthenticatedLayout,
 } from '../../../../../../admin/src/layouts/UnauthenticatedLayout';
-import { GetProviders } from '../../../../../../shared/contracts/providers';
+import { useGetProvidersQuery } from '../../../../../../admin/src/services/auth';
 
 import { SSOProviders } from './SSOProviders';
 
 const Providers = () => {
-  const { push } = useHistory();
+  const navigate = useNavigate();
   const { formatMessage } = useIntl();
-  const { get } = useFetchClient();
-  const { isLoading, data: providers = [] } = useQuery(
-    ['ee', 'providers'],
-    async () => {
-      const { data } = await get<GetProviders.Response>('/admin/providers');
-
-      return data;
-    },
-    {
-      enabled: window.strapi.features.isEnabled(window.strapi.features.SSO),
-    }
-  );
+  const { isLoading, data: providers = [] } = useGetProvidersQuery(undefined, {
+    skip: !window.strapi.features.isEnabled(window.strapi.features.SSO),
+  });
 
   const handleClick = () => {
-    push('/auth/login');
+    navigate('/auth/login');
   };
 
   if (
     !window.strapi.features.isEnabled(window.strapi.features.SSO) ||
     (!isLoading && providers.length === 0)
   ) {
-    return <Redirect to="/auth/login" />;
+    return <Navigate to="/auth/login" />;
   }
 
   return (
@@ -50,7 +38,7 @@ const Providers = () => {
           <Column>
             <Logo />
             <Box paddingTop={6} paddingBottom={1}>
-              <Typography as="h1" variant="alpha">
+              <Typography tag="h1" variant="alpha">
                 {formatMessage({ id: 'Auth.form.welcome.title' })}
               </Typography>
             </Box>
@@ -84,8 +72,7 @@ const Providers = () => {
         </LayoutContent>
         <Flex justifyContent="center">
           <Box paddingTop={4}>
-            {/* @ts-expect-error – error with inferring the props from the as component */}
-            <Link as={NavLink} to="/auth/forgot-password">
+            <Link tag={NavLink} to="/auth/forgot-password">
               <Typography variant="pi">
                 {formatMessage({ id: 'Auth.link.forgot-password' })}
               </Typography>

@@ -1,11 +1,13 @@
 'use strict';
 
-const { factory } = require('typescript');
+const ts = require('typescript');
 const _ = require('lodash/fp');
 
 const { addImport } = require('../imports');
 const { getTypeNode, toTypeLiteral, withAttributeNamespace, NAMESPACES } = require('./utils');
 const mappers = require('./mappers');
+
+const { factory } = ts;
 
 /**
  * Create the base type node for a given attribute
@@ -26,8 +28,8 @@ const getAttributeType = (attributeName, attribute, uid) => {
 
   const [attributeType, typeParams] = mappers[attribute.type]({ uid, attribute, attributeName });
 
-  // Make sure the attribute namespace is imported
-  addImport(NAMESPACES.attribute);
+  // Make sure the schema namespace is imported
+  addImport(NAMESPACES.Schema);
 
   return getTypeNode(attributeType, typeParams);
 };
@@ -100,14 +102,39 @@ const getAttributeModifiers = (attribute) => {
   }
 
   // Min / Max
-  // TODO: Always provide a second type argument for min/max (ie: resolve the attribute scalar type with a `GetAttributeType<${mappers[attribute][0]}>` (useful for biginter (string values)))
   if (!_.isNil(attribute.min) || !_.isNil(attribute.max)) {
     const minMaxProperties = _.pick(['min', 'max'], attribute);
+    const { min, max } = minMaxProperties;
+
+    const typeofMin = typeof min;
+    const typeofMax = typeof max;
+
+    // Throws error if min/max exist but have different types to prevent unexpected behavior
+    if (min !== undefined && max !== undefined && typeofMin !== typeofMax) {
+      throw new Error('typeof min/max values mismatch');
+    }
+
+    let typeKeyword;
+
+    // use 'string'
+    if (typeofMin === 'string' || typeofMax === 'string') {
+      typeKeyword = ts.SyntaxKind.StringKeyword;
+    }
+    // use 'number'
+    else if (typeofMin === 'number' || typeofMax === 'number') {
+      typeKeyword = ts.SyntaxKind.NumberKeyword;
+    }
+    // invalid type
+    else {
+      throw new Error(
+        `Invalid data type for min/max options. Must be string, number or undefined, but found { min: ${min} (${typeofMin}), max: ${max} (${typeofMax}) }`
+      );
+    }
 
     modifiers.push(
       factory.createTypeReferenceNode(
         factory.createIdentifier(withAttributeNamespace('SetMinMax')),
-        [toTypeLiteral(minMaxProperties)]
+        [toTypeLiteral(minMaxProperties), factory.createKeywordTypeNode(typeKeyword)]
       )
     );
   }
@@ -124,8 +151,8 @@ const getAttributeModifiers = (attribute) => {
     );
   }
 
-  // Default
-  if (!_.isNil(attribute.default)) {
+  // Default (ignore if default is a function)
+  if (!_.isNil(attribute.default) && !_.isFunction(attribute.default)) {
     const defaultLiteral = toTypeLiteral(attribute.default);
 
     modifiers.push(
@@ -168,6 +195,4 @@ const attributeToPropertySignature = (schema, attributeName, attribute) => {
 
 module.exports = attributeToPropertySignature;
 
-module.exports.mappers = mappers;
-module.exports.getAttributeType = getAttributeType;
-module.exports.getAttributeModifiers = getAttributeModifiers;
+Object.assign(module.exports, { mappers, getAttributeModifiers, getAttributeType });

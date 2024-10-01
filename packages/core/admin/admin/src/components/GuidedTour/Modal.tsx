@@ -4,27 +4,32 @@ import {
   Box,
   Button,
   Flex,
+  FlexComponent,
   FocusTrap,
   IconButton,
   Portal,
   Typography,
+  LinkButton,
 } from '@strapi/design-system';
-import { LinkButton } from '@strapi/design-system/v2';
-import { GuidedTourContextValue, pxToRem, useGuidedTour, useTracking } from '@strapi/helper-plugin';
 import { ArrowRight, Cross } from '@strapi/icons';
 import get from 'lodash/get';
 import { MessageDescriptor, useIntl } from 'react-intl';
 import { NavLink } from 'react-router-dom';
-import styled from 'styled-components';
+import { styled } from 'styled-components';
+
+import { useTracking } from '../../features/Tracking';
 
 import { LAYOUT_DATA, STATES } from './constants';
 import { Number, VerticalDivider } from './Ornaments';
+import { GuidedTourContextValue, useGuidedTour } from './Provider';
 
 /* -------------------------------------------------------------------------------------------------
  * GuidedTourModal
  * -----------------------------------------------------------------------------------------------*/
 
 const GuidedTourModal = () => {
+  const guidedTour = useGuidedTour('GuidedTourModal', (state) => state);
+
   const {
     currentStep,
     guidedTourState,
@@ -32,7 +37,8 @@ const GuidedTourModal = () => {
     setStepState,
     isGuidedTourVisible,
     setSkipped,
-  } = useGuidedTour();
+  } = guidedTour;
+
   const { formatMessage } = useIntl();
   const { trackUsage } = useTracking();
 
@@ -44,7 +50,7 @@ const GuidedTourModal = () => {
   const sectionKeys = Object.keys(guidedTourState);
   const [sectionName, stepName] = currentStep.split('.') as [
     keyof GuidedTourContextValue['guidedTourState'],
-    string
+    string,
   ];
   const sectionIndex = sectionKeys.indexOf(sectionName);
   const stepIndex = Object.keys(guidedTourState[sectionName]).indexOf(stepName);
@@ -53,7 +59,10 @@ const GuidedTourModal = () => {
 
   const handleCtaClick = () => {
     setStepState(currentStep, true);
-    trackUsage(stepData.trackingEvent);
+
+    if (stepData) {
+      trackUsage(stepData.trackingEvent);
+    }
 
     setCurrentStep(null);
   };
@@ -72,7 +81,7 @@ const GuidedTourModal = () => {
             direction="column"
             alignItems="stretch"
             background="neutral0"
-            width={pxToRem(660)}
+            width={`66rem`}
             shadow="popupShadow"
             hasRadius
             padding={4}
@@ -84,7 +93,8 @@ const GuidedTourModal = () => {
             <Flex justifyContent="flex-end">
               <IconButton
                 onClick={handleCtaClick}
-                aria-label={formatMessage({
+                withTooltip={false}
+                label={formatMessage({
                   id: 'app.utils.close-label',
                   defaultMessage: 'Close',
                 })}
@@ -98,14 +108,14 @@ const GuidedTourModal = () => {
               paddingBottom={!hasStepAfter && !hasSectionAfter ? 8 : 0}
             >
               <GuidedTourStepper
-                title={stepData.title}
-                cta={'cta' in stepData ? stepData.cta : undefined}
+                title={stepData && 'title' in stepData ? stepData.title : undefined}
+                cta={stepData && 'cta' in stepData ? stepData.cta : undefined}
                 onCtaClick={handleCtaClick}
                 sectionIndex={sectionIndex}
                 stepIndex={stepIndex}
                 hasSectionAfter={hasSectionAfter}
               >
-                <GuidedTourContent {...stepData.content} />
+                {stepData && 'content' in stepData && <GuidedTourContent {...stepData.content} />}
               </GuidedTourStepper>
             </Box>
             {!(!hasStepAfter && !hasSectionAfter) && (
@@ -125,7 +135,7 @@ const GuidedTourModal = () => {
   );
 };
 
-const ModalWrapper = styled(Flex)`
+const ModalWrapper = styled<FlexComponent>(Flex)`
   position: fixed;
   z-index: 4;
   inset: 0;
@@ -138,7 +148,7 @@ const ModalWrapper = styled(Flex)`
  * -----------------------------------------------------------------------------------------------*/
 
 interface GuidedTourStepperProps {
-  title: MessageDescriptor;
+  title: MessageDescriptor | undefined;
   children: React.ReactNode;
   cta?: {
     title: MessageDescriptor;
@@ -168,8 +178,8 @@ const GuidedTourStepper = ({
   return (
     <>
       <Flex alignItems="stretch">
-        <Flex marginRight={8} justifyContent="center" minWidth={pxToRem(30)}>
-          {hasSectionBefore && <VerticalDivider state={STATES.IS_DONE} minHeight={pxToRem(24)} />}
+        <Flex marginRight={8} justifyContent="center" minWidth={`3rem`}>
+          {hasSectionBefore && <VerticalDivider state={STATES.IS_DONE} minHeight={`2.4rem`} />}
         </Flex>
         <Typography variant="sigma" textColor="primary600">
           {formatMessage({
@@ -179,7 +189,7 @@ const GuidedTourStepper = ({
         </Typography>
       </Flex>
       <Flex>
-        <Flex marginRight={8} minWidth={pxToRem(30)}>
+        <Flex marginRight={8} minWidth={`3rem`}>
           <Number
             state={hasStepsBefore ? STATES.IS_DONE : STATES.IS_ACTIVE}
             paddingTop={3}
@@ -188,12 +198,14 @@ const GuidedTourStepper = ({
             {sectionIndex + 1}
           </Number>
         </Flex>
-        <Typography variant="alpha" fontWeight="bold" textColor="neutral800" as="h3" id="title">
-          {formatMessage(title)}
-        </Typography>
+        {title && (
+          <Typography variant="alpha" fontWeight="bold" textColor="neutral800" tag="h3" id="title">
+            {formatMessage(title)}
+          </Typography>
+        )}
       </Flex>
       <Flex alignItems="stretch">
-        <Flex marginRight={8} direction="column" justifyContent="center" minWidth={pxToRem(30)}>
+        <Flex marginRight={8} direction="column" justifyContent="center" minWidth={`3rem`}>
           {hasSectionAfter && (
             <>
               <VerticalDivider state={STATES.IS_DONE} />
@@ -210,10 +222,9 @@ const GuidedTourStepper = ({
           {cta &&
             (cta.target ? (
               <LinkButton
-                as={NavLink}
+                tag={NavLink}
                 endIcon={<ArrowRight />}
                 onClick={onCtaClick}
-                // @ts-expect-error - types are not inferred correctly through the as prop.
                 to={cta.target}
               >
                 {formatMessage(cta.title)}
@@ -227,8 +238,8 @@ const GuidedTourStepper = ({
       </Flex>
       {hasStepsBefore && hasSectionAfter && (
         <Box paddingTop={3}>
-          <Flex marginRight={8} justifyContent="center" width={pxToRem(30)}>
-            <VerticalDivider state={STATES.IS_DONE} minHeight={pxToRem(24)} />
+          <Flex marginRight={8} justifyContent="center" width={`3rem`}>
+            <VerticalDivider state={STATES.IS_DONE} minHeight={`2.4rem`} />
           </Flex>
         </Box>
       )}
@@ -265,7 +276,7 @@ const GuidedTourContent = ({ id, defaultMessage }: GuidedTourContentProps) => {
 
 const DocumentationLink = (children: React.ReactNode) => (
   <Typography
-    as="a"
+    tag="a"
     textColor="primary600"
     target="_blank"
     rel="noopener noreferrer"

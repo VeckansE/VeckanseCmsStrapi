@@ -1,5 +1,10 @@
 {
   "extends": "tsconfig/client.json",
-  "include": ["_internal", "packup.config.ts"],
-  "exclude": ["node_modules"]
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "outDir": "./dist/cli"
+  },
+  "include": ["_internal"]
 }

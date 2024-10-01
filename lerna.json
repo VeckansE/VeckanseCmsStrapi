@@ -1,7 +1,4 @@
 {
-  "version": "4.16.2",
-  "packages": ["packages/*", "examples/*"],
-  "npmClient": "yarn",
-  "useWorkspaces": true,
-  "useNx": true
+  "version": "5.0.2-beta.0",
+  "npmClient": "yarn"
 }
